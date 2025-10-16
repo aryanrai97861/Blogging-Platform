@@ -1,0 +1,248 @@
+'use client';
+
+import { trpc } from '@/app/providers';
+import Navigation from '@/components/Navigation';
+import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+export default function EditPostPage() {
+  const router = useRouter();
+  const params = useParams();
+  const postId = params?.id ? Number(params.id) : 0;
+
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [published, setPublished] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+
+  const { data: post, isLoading: postLoading } = trpc.post.getById.useQuery(
+    { id: postId },
+    { enabled: postId > 0 }
+  );
+
+  const { data: categories } = trpc.category.getAll.useQuery();
+
+  const updatePost = trpc.post.update.useMutation({
+    onSuccess: (data) => {
+      router.push(`/blog/${data.slug}`);
+    },
+    onError: (error) => {
+      console.error('Error updating post:', error);
+      alert(`Error updating post: ${error.message}`);
+    },
+  });
+
+  const deletePost = trpc.post.delete.useMutation({
+    onSuccess: () => {
+      router.push('/blog');
+    },
+    onError: (error) => {
+      console.error('Error deleting post:', error);
+      alert(`Error deleting post: ${error.message}`);
+    },
+  });
+
+  useEffect(() => {
+    if (post) {
+      setTitle(post.title);
+      setContent(post.content);
+      setPublished(post.published);
+      setSelectedCategories(
+        Array.isArray(post.postsToCategories) 
+          ? post.postsToCategories.map((ptc: any) => ptc.categoryId) 
+          : []
+      );
+    }
+  }, [post]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!title.trim() || !content.trim()) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    updatePost.mutate({
+      id: postId,
+      title,
+      content,
+      published,
+      categoryIds: selectedCategories,
+    });
+  };
+
+  const handleDelete = () => {
+    if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      deletePost.mutate({ id: postId });
+    }
+  };
+
+  const toggleCategory = (categoryId: number) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  // Ensure categories is an array
+  const categoryList = Array.isArray(categories) ? categories : [];
+
+  if (postLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-2 text-gray-600">Loading post...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!post) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-red-800 mb-2">Post not found</h2>
+            <p className="text-red-600">The post you're trying to edit doesn't exist.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Edit Post</h1>
+          <p className="text-lg text-gray-600">
+            Update your blog post
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Title */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+              Title *
+            </label>
+            <input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter your post title"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+
+          {/* Content */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
+              Content * (Markdown supported)
+            </label>
+            <textarea
+              id="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write your post content in Markdown..."
+              rows={15}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+              required
+            />
+            <p className="mt-2 text-sm text-gray-500">
+              Supports Markdown formatting: **bold**, *italic*, # headings, etc.
+            </p>
+          </div>
+
+          {/* Categories */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Categories
+            </label>
+            {categoryList.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {categoryList.map((category) => (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => toggleCategory(category.id)}
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      selectedCategories.includes(category.id)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm">
+                No categories available.
+              </p>
+            )}
+          </div>
+
+          {/* Publish Status */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="published"
+                checked={published}
+                onChange={(e) => setPublished(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="published" className="ml-2 block text-sm text-gray-900">
+                Published
+              </label>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              disabled={updatePost.isPending}
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {updatePost.isPending ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push(`/blog/${post.slug}`)}
+              className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deletePost.isPending}
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+            >
+              {deletePost.isPending ? 'Deleting...' : 'Delete Post'}
+            </button>
+          </div>
+
+          {(updatePost.isError || deletePost.isError) && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-800">An error occurred. Please try again.</p>
+            </div>
+          )}
+        </form>
+      </div>
+    </div>
+  );
+}
