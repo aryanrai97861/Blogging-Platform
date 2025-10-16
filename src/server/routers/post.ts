@@ -5,6 +5,29 @@ import { posts, postsToCategories } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import slugify from 'slugify';
 
+// Helper function to generate a unique slug
+async function generateUniqueSlug(title: string, currentPostId?: number): Promise<string> {
+  const baseSlug = slugify(title, { lower: true, strict: true });
+  let slug = baseSlug;
+  let counter = 1;
+
+  // Keep trying until we find a unique slug
+  while (true) {
+    const existingPost = await db.query.posts.findFirst({
+      where: eq(posts.slug, slug),
+    });
+
+    // If no post exists with this slug, or it's the current post being updated, use it
+    if (!existingPost || (currentPostId && existingPost.id === currentPostId)) {
+      return slug;
+    }
+
+    // Otherwise, append a number and try again
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+}
+
 export const postRouter = router({
   // Get all posts (with optional category filter)
   getAll: publicProcedure
@@ -107,7 +130,7 @@ export const postRouter = router({
     .mutation(async ({ input }) => {
       try {
         console.log('Creating post with input:', input);
-        const slug = slugify(input.title, { lower: true, strict: true });
+        const slug = await generateUniqueSlug(input.title);
         console.log('Generated slug:', slug);
         
         const [post] = await db
@@ -170,7 +193,7 @@ export const postRouter = router({
 
       if (input.title !== undefined) {
         updateData.title = input.title;
-        updateData.slug = slugify(input.title, { lower: true, strict: true });
+        updateData.slug = await generateUniqueSlug(input.title, input.id);
       }
       if (input.content !== undefined) updateData.content = input.content;
       if (input.published !== undefined) updateData.published = input.published;
