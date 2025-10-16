@@ -14,7 +14,7 @@ export default function BlogPage() {
     published: showPublishedOnly ? true : undefined,
   });
 
-  const { data: categories, isLoading: categoriesLoading } = trpc.category.getAll.useQuery();
+  const { data: categories } = trpc.category.getAll.useQuery();
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {

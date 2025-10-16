@@ -40,7 +40,7 @@ export default function BlogPostPage() {
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-red-800 mb-2">Post not found</h2>
-            <p className="text-red-600 mb-4">The blog post you're looking for doesn't exist.</p>
+            <p className="text-red-600 mb-4">The blog post you&apos;re looking for doesn&apos;t exist.</p>
             <Link
               href="/blog"
               className="inline-block px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"

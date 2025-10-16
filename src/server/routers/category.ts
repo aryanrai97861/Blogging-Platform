@@ -78,7 +78,7 @@ export const categoryRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const updateData: any = {};
+      const updateData: Record<string, string | null> = {};
 
       if (input.name !== undefined) {
         updateData.name = input.name;

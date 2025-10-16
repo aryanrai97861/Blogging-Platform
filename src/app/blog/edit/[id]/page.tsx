@@ -49,7 +49,7 @@ export default function EditPostPage() {
       setPublished(post.published);
       setSelectedCategories(
         Array.isArray(post.postsToCategories) 
-          ? post.postsToCategories.map((ptc: any) => ptc.categoryId) 
+          ? post.postsToCategories.map((ptc: { categoryId: number }) => ptc.categoryId) 
           : []
       );
     }
@@ -110,7 +110,7 @@ export default function EditPostPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-red-800 mb-2">Post not found</h2>
-            <p className="text-red-600">The post you're trying to edit doesn't exist.</p>
+            <p className="text-red-600">The post you&apos;re trying to edit doesn&apos;t exist.</p>
           </div>
         </div>
       </div>

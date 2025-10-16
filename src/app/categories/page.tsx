@@ -58,7 +58,7 @@ export default function CategoriesPage() {
     }
   };
 
-  const handleEdit = (category: any) => {
+  const handleEdit = (category: { id: number; name: string; description: string | null }) => {
     setEditingId(category.id);
     setName(category.name);
     setDescription(category.description || '');

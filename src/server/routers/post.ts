@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, publicProcedure } from '../trpc';
 import { db } from '@/db';
 import { posts, postsToCategories } from '@/db/schema';
-import { eq, desc, inArray } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import slugify from 'slugify';
 
 export const postRouter = router({
@@ -15,7 +15,7 @@ export const postRouter = router({
       }).optional()
     )
     .query(async ({ input }) => {
-      let query = db.query.posts.findMany({
+      const query = db.query.posts.findMany({
         orderBy: [desc(posts.createdAt)],
         with: {
           postsToCategories: {
@@ -164,7 +164,7 @@ export const postRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const updateData: any = {
+      const updateData: Record<string, string | boolean | Date> = {
         updatedAt: new Date(),
       };
 
