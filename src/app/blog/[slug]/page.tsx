@@ -3,9 +3,9 @@
 import { trpc } from '@/app/providers';
 import Navigation from '@/components/Navigation';
 import SEO from '@/components/SEO';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
 import { calculateReadingTime, getWordCount, formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -102,9 +102,10 @@ export default function BlogPostPage() {
 
             {/* Content */}
             <div className="px-6 py-8">
-              <div className="prose prose-lg dark:prose-invert max-w-none">
-                <ReactMarkdown>{post.content}</ReactMarkdown>
-              </div>
+              <MarkdownRenderer 
+                content={post.content}
+                className="prose prose-lg dark:prose-invert max-w-none"
+              />
             </div>
 
             {/* Footer */}

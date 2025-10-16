@@ -2,9 +2,9 @@
 
 import { trpc } from '@/app/providers';
 import Navigation from '@/components/Navigation';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
 
 export const dynamic = 'force-dynamic';
 
@@ -168,7 +168,7 @@ export default function EditPostPage() {
             {showPreview ? (
               <div className="prose dark:prose-invert max-w-none p-4 border border-gray-200 dark:border-gray-600 rounded-md min-h-[400px] bg-gray-50 dark:bg-gray-900">
                 {content ? (
-                  <ReactMarkdown>{content}</ReactMarkdown>
+                  <MarkdownRenderer content={content} className="prose dark:prose-invert max-w-none" />
                 ) : (
                   <p className="text-gray-400 dark:text-gray-500 italic">No content to preview yet...</p>
                 )}
