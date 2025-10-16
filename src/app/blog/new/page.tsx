@@ -4,6 +4,9 @@ import { trpc } from '@/app/providers';
 import Navigation from '@/components/Navigation';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+
+export const dynamic = 'force-dynamic';
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -11,6 +14,7 @@ export default function NewPostPage() {
   const [content, setContent] = useState('');
   const [published, setPublished] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
 
   const { data: categories } = trpc.category.getAll.useQuery();
   const createPost = trpc.post.create.useMutation({
@@ -59,21 +63,21 @@ export default function NewPostPage() {
   const categoryList = Array.isArray(categories) ? categories : [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navigation />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Create New Post</h1>
-          <p className="text-lg text-gray-600">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Create New Post</h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300">
             Write and publish your blog post
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Title *
             </label>
             <input
@@ -82,33 +86,55 @@ export default function NewPostPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter your post title"
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               required
             />
           </div>
 
           {/* Content */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
-              Content * (Markdown supported)
-            </label>
-            <textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Write your post content in Markdown..."
-              rows={15}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-              required
-            />
-            <p className="mt-2 text-sm text-gray-500">
-              Supports Markdown formatting: **bold**, *italic*, # headings, etc.
-            </p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+            <div className="flex justify-between items-center mb-2">
+              <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Content * (Markdown supported)
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowPreview(!showPreview)}
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+              >
+                {showPreview ? 'Edit' : 'Preview'}
+              </button>
+            </div>
+
+            {showPreview ? (
+              <div className="prose dark:prose-invert max-w-none p-4 border border-gray-200 dark:border-gray-600 rounded-md min-h-[400px] bg-gray-50 dark:bg-gray-900">
+                {content ? (
+                  <ReactMarkdown>{content}</ReactMarkdown>
+                ) : (
+                  <p className="text-gray-400 dark:text-gray-500 italic">No content to preview yet...</p>
+                )}
+              </div>
+            ) : (
+              <>
+                <textarea
+                  id="content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Write your post content in Markdown..."
+                  rows={15}
+                  className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                  required
+                />
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  Supports Markdown formatting: **bold**, *italic*, # headings, etc.
+                </p>
+              </>
+            )}
           </div>
 
           {/* Categories */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Categories
             </label>
             {categoryList.length > 0 ? (
@@ -120,8 +146,8 @@ export default function NewPostPage() {
                     onClick={() => toggleCategory(category.id)}
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       selectedCategories.includes(category.id)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        ? 'bg-blue-600 text-white dark:bg-blue-500'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                     }`}
                   >
                     {category.name}
@@ -129,23 +155,23 @@ export default function NewPostPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 No categories available. Create some categories first.
               </p>
             )}
           </div>
 
           {/* Publish Status */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 p-6">
             <div className="flex items-center">
               <input
                 type="checkbox"
                 id="published"
                 checked={published}
                 onChange={(e) => setPublished(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
               />
-              <label htmlFor="published" className="ml-2 block text-sm text-gray-900">
+              <label htmlFor="published" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
                 Publish immediately (uncheck to save as draft)
               </label>
             </div>
@@ -156,22 +182,22 @@ export default function NewPostPage() {
             <button
               type="submit"
               disabled={createPost.isPending}
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {createPost.isPending ? 'Creating...' : published ? 'Publish Post' : 'Save Draft'}
             </button>
             <button
               type="button"
               onClick={() => router.push('/blog')}
-              className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              className="inline-flex items-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-base font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
             >
               Cancel
             </button>
           </div>
 
           {createPost.isError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800">Error creating post. Please try again.</p>
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <p className="text-red-800 dark:text-red-200">Error creating post. Please try again.</p>
             </div>
           )}
         </form>
